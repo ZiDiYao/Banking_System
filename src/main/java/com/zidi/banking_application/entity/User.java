@@ -25,6 +25,7 @@ public class User {
     private String otherName;
     private String gender;
     private String address;
+    private String email;
     private String stateOfOrigin;
     private String accountNumber;
     @Column(precision = 19, scale = 2)
