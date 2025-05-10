@@ -5,10 +5,12 @@ import com.zidi.banking_application.dto.BankResponse;
 import com.zidi.banking_application.dto.EmailDetails;
 import com.zidi.banking_application.dto.UserRequest;
 import com.zidi.banking_application.entity.User;
+import com.zidi.banking_application.event.UserCreatedEvent;
 import com.zidi.banking_application.mapper.UserMapper;
 import com.zidi.banking_application.service.EmailService;
 import com.zidi.banking_application.service.UserService;
 import com.zidi.banking_application.utils.AccountUtils;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,13 +26,11 @@ public class UserServiceImpl implements UserService {
     private UserMapper userMapper;
 
     @Autowired
-    private EmailService emailService;
+    private ApplicationEventPublisher eventPublisher;
 
-    @Transactional
     @Override
+    @Transactional
     public BankResponse createAccount(UserRequest userRequest) {
-
-        // check if the account exits or not
         if (userMapper.existsByEmail(userRequest.getEmail())) {
             return BankResponse.builder()
                     .responseCode("409")
@@ -39,7 +39,6 @@ public class UserServiceImpl implements UserService {
                     .build();
         }
 
-        // build user object
         User newUser = User.builder()
                 .firstName(userRequest.getFirstName())
                 .lastName(userRequest.getLastName())
@@ -55,30 +54,19 @@ public class UserServiceImpl implements UserService {
                 .status("ACTIVE")
                 .build();
 
-        // save user
         userMapper.insertUser(newUser);
 
-        // send email alert
-        EmailDetails emailDetails = EmailDetails.builder()
-                .recipient(newUser.getEmail())
-                .subject("Account CREATION")
-                .messageBody("CONGRATUATION Your Account has been Successfully Created.\n Your Account Details:" +
-                        "Account Name" + newUser.getFirstName() + " " + newUser.getLastName() + "\n Account Number"
-                        + newUser.getAccountNumber())
-                .build();
-        emailService.sendEmailAlert(emailDetails);
+        //publish the event
+        eventPublisher.publishEvent(new UserCreatedEvent(this, newUser));
 
-        // build response
         return BankResponse.builder()
                 .responseCode("201")
                 .responseMessage("Account created successfully")
-                .accountInfo(
-                        AccountInfo.builder()
-                                .accountName(newUser.getFirstName() + " " + newUser.getLastName())
-                                .accountNumber(newUser.getAccountNumber())
-                                .accountBalance(newUser.getAccountBalance().toPlainString())
-                                .build()
-                )
+                .accountInfo(AccountInfo.builder()
+                        .accountName(newUser.getFirstName() + " " + newUser.getLastName())
+                        .accountNumber(newUser.getAccountNumber())
+                        .accountBalance(newUser.getAccountBalance().toPlainString())
+                        .build())
                 .build();
     }
 }
