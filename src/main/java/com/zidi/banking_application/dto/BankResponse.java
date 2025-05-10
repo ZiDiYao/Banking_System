@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class BankResponse {
 
-    private String responmseCode;
+    private String responseCode;
 
     private String responseMessage;
 

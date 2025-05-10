@@ -11,7 +11,6 @@ import com.zidi.banking_application.utils.AccountUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.zidi.banking_application.mapper.UserMapper;
-
 import java.math.BigDecimal;
 
 
@@ -27,7 +26,7 @@ public class UserServiceImpl implements UserService {
         // check if the account exits or not
         if (userMapper.existsByEmail(userRequest.getEmail())) {
             return BankResponse.builder()
-                    .responmseCode("409")
+                    .responseCode("409")
                     .responseMessage("Email already exists")
                     .accountInfo(null)
                     .build();
@@ -54,7 +53,7 @@ public class UserServiceImpl implements UserService {
 
         // build response
         return BankResponse.builder()
-                .responmseCode("201")
+                .responseCode("201")
                 .responseMessage("Account created successfully")
                 .accountInfo(
                         AccountInfo.builder()
